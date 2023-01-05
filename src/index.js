@@ -16,18 +16,18 @@ countrySelector.addEventListener(
 
 function searchCountry() {
   const name = countrySelector.value;
+
   name.length === 0
     ? (countryInfo.innerHTML = '')
-    : name.length !== 0 &&
-      API.fletchCountry(name)
-        .then(countries => showList(countries))
+    : API.fletchCountry(name)
+        .then(countries => onInputType(countries))
         .then(country => showResult(country))
         .catch(error =>
           Notiflix.Notify.failure('Oops, there is no country with that name')
         );
 }
 
-function showList(countries) {
+function onInputType(countries) {
   list.innerHTML = '';
 
   if (countries.length > 10) {
@@ -35,29 +35,38 @@ function showList(countries) {
       'Too many matches found. Please enter a more specific name.'
     );
   } else if (countries.length > 1) {
-    const markup = [];
-
-    list.addEventListener('click', countrySelect);
-
-    countries.forEach(({ flags, name }) => {
-      markup.push(
-        `<li data-name="${name.common}"><a href><img src="${flags.svg}" width="80"/>${name.official}</a></li>`
-      );
-    });
-
-    list.innerHTML = markup.join('');
-    return;
+    showList(countries);
   } else if (countries.length === 1) {
     return countries[0];
   }
+}
 
-  return countries;
+function showList(countries) {
+  const markup = [];
+
+  countries.forEach(({ flags, name }) => {
+    markup.push(
+      `<li data-name="${name.common}"><a href><img src="${flags.svg}" width="80"/>${name.official}</a></li>`
+    );
+  });
+
+  list.innerHTML = markup.join('');
+
+  [...list.children].forEach(el =>
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      showResult(
+        countries.find(country => country.name.common === el.dataset.name)
+      );
+    })
+  );
 }
 
 function showResult(country) {
   countryInfo.innerHTML = '';
 
   if (country) {
+    list.innerHTML = '';
     const { flags, name, capital, population, languages } = country;
 
     const markup = `<div class="country-card"><img src="${
@@ -69,11 +78,4 @@ function showResult(country) {
     ).join(', ')}</p></div>`;
     countryInfo.innerHTML = markup;
   }
-}
-
-function countrySelect(e) {
-  e.preventDefault();
-  console.log(e.target.dataset.name);
-  // showResult(countries.find(c => c.name.common === e.target.dataset.name));
-  list.innerHTML = '';
 }
