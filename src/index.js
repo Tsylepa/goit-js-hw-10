@@ -4,6 +4,7 @@ import API from './js/fetchCountries';
 
 var debounce = require('lodash.debounce');
 const DEBOUNCE_DELAY = 300;
+const NOT_ALLOWED_COUNTRIES = ['RU', 'BY'];
 
 const countrySelector = document.querySelector('#search-box');
 const countryInfo = document.querySelector('.country-info');
@@ -20,11 +21,18 @@ function searchCountry() {
   name.length === 0
     ? (countryInfo.innerHTML = '')
     : API.fletchCountry(name)
+        .then(countries => isAllowed(countries))
         .then(countries => onInputType(countries))
         .then(country => showResult(country))
         .catch(error =>
           Notiflix.Notify.failure('Oops, there is no country with that name')
         );
+}
+
+function isAllowed(countries) {
+  return countries.filter(
+    country => !NOT_ALLOWED_COUNTRIES.includes(country.cca2)
+  );
 }
 
 function onInputType(countries) {
@@ -39,6 +47,8 @@ function onInputType(countries) {
   } else if (countries.length === 1) {
     return countries[0];
   }
+
+  return;
 }
 
 function showList(countries) {
@@ -73,9 +83,14 @@ function showResult(country) {
       flags.svg
     }" class="flag"/><h1>${
       name.official
-    }</h1><p><b>Capital:</b> ${capital}</p><p><b>Population:</b> ${population}</p><p><b>Languages:</b> ${Object.values(
-      languages
-    ).join(', ')}</p></div>`;
+    }</h1><p><b>Capital:</b> ${capital}</p><p><b>Population:</b> ${population
+      .toString()
+      .replace(
+        /\B(?=(\d{3})+(?!\d))/g,
+        ','
+      )}</p><p><b>Languages:</b> ${Object.values(languages).join(
+      ', '
+    )}</p></div>`;
     countryInfo.innerHTML = markup;
   }
 }
