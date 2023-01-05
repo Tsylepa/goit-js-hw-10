@@ -46,9 +46,9 @@ function onInputType(countries) {
     showList(countries);
   } else if (countries.length === 1) {
     return countries[0];
+  } else {
+    return Error.apply;
   }
-
-  return Error.apply;
 }
 
 function showList(countries) {
